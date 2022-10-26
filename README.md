@@ -1,0 +1,1 @@
+## Necessary Patches Required For Realme Pad Wifi/Volte (RMP2103,RMP2102)
