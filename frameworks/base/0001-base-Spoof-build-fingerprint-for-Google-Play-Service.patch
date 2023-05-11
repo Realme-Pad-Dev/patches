@@ -1,0 +1,125 @@
+From 6f84cd1d60f3db12d96032c8ec7316803443f68e Mon Sep 17 00:00:00 2001
+From: Danny Lin <danny@kdrag0n.dev>
+Date: Mon, 11 Oct 2021 19:59:51 -0700
+Subject: [PATCH] base: Spoof build fingerprint for Google Play Services [1/2]
+
+SafetyNet's CTS profile attestation checks whether Build.FINGERPRINT
+matches that of the device's stock OS, which has passed CTS testing.
+Spoof the fingerprint for Google Play Services to help pass SafetyNet.
+
+NB: This code is under the gmscompat package, but it does not depend on
+any code from gmscompat.
+
+arrow edits:
+ - Correct prop name for our logic. We are planning to use fp for different devices (like old oreo or follow new Pixel's).
+
+Signed-off-by: palaych <palaych@arrowos.net>
+Change-Id: I26a2498eb2e2163933303b03f6d516e5fb30fe51
+---
+ core/java/android/app/Instrumentation.java    |  3 +
+ .../internal/gmscompat/AttestationHooks.java  | 65 +++++++++++++++++++
+ 2 files changed, 68 insertions(+)
+ create mode 100644 core/java/com/android/internal/gmscompat/AttestationHooks.java
+
+diff --git a/core/java/android/app/Instrumentation.java b/core/java/android/app/Instrumentation.java
+index 556058b567f9..a31a2245d66f 100644
+--- a/core/java/android/app/Instrumentation.java
++++ b/core/java/android/app/Instrumentation.java
+@@ -56,6 +56,7 @@ import android.view.Window;
+ import android.view.WindowManagerGlobal;
+ 
+ import com.android.internal.content.ReferrerIntent;
++import com.android.internal.gmscompat.AttestationHooks;
+ 
+ import java.io.File;
+ import java.lang.annotation.Retention;
+@@ -1242,6 +1243,7 @@ public class Instrumentation {
+         Application app = getFactory(context.getPackageName())
+                 .instantiateApplication(cl, className);
+         app.attach(context);
++        AttestationHooks.initApplicationBeforeOnCreate(app);
+         return app;
+     }
+     
+@@ -1259,6 +1261,7 @@ public class Instrumentation {
+             ClassNotFoundException {
+         Application app = (Application)clazz.newInstance();
+         app.attach(context);
++        AttestationHooks.initApplicationBeforeOnCreate(app);
+         return app;
+     }
+ 
+diff --git a/core/java/com/android/internal/gmscompat/AttestationHooks.java b/core/java/com/android/internal/gmscompat/AttestationHooks.java
+new file mode 100644
+index 000000000000..95af2e9aa2da
+--- /dev/null
++++ b/core/java/com/android/internal/gmscompat/AttestationHooks.java
+@@ -0,0 +1,65 @@
++/*
++ * Copyright (C) 2021 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.gmscompat;
++
++import android.app.Application;
++import android.os.Build;
++import android.os.SystemProperties;
++import android.util.Log;
++
++import java.lang.reflect.Field;
++
++/** @hide */
++public final class AttestationHooks {
++    private static final String TAG = "GmsCompat/Attestation";
++
++    private static final String PACKAGE_GMS = "com.google.android.gms";
++
++    private static final String PRODUCT_GMS_SPOOFING_FINGERPRINT =
++            SystemProperties.get("ro.build.gms_fingerprint");
++
++    private AttestationHooks() { }
++
++    private static void setBuildField(String key, String value) {
++        try {
++            // Unlock
++            Field field = Build.class.getDeclaredField(key);
++            field.setAccessible(true);
++
++            // Edit
++            field.set(null, value);
++
++            // Lock
++            field.setAccessible(false);
++        } catch (NoSuchFieldException | IllegalAccessException e) {
++            Log.e(TAG, "Failed to spoof Build." + key, e);
++        }
++    }
++
++    private static void spoofBuildGms() {
++        // Set fingerprint for SafetyNet CTS profile
++        if (PRODUCT_GMS_SPOOFING_FINGERPRINT.length() > 0) {
++            setBuildField("FINGERPRINT", PRODUCT_GMS_SPOOFING_FINGERPRINT);
++        }
++    }
++
++    public static void initApplicationBeforeOnCreate(Application app) {
++        if (PACKAGE_GMS.equals(app.getPackageName())) {
++            spoofBuildGms();
++        }
++    }
++}
+-- 
+2.40.0
+

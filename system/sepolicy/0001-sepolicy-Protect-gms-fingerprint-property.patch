@@ -1,0 +1,70 @@
+From a6459914451e42f9993a2567325322e5f34ebffc Mon Sep 17 00:00:00 2001
+From: Danny Lin <danny@kdrag0n.dev>
+Date: Tue, 5 Oct 2021 16:11:22 -0700
+Subject: [PATCH] sepolicy: Protect gms fingerprint property
+
+Label it with the same SELinux context as the default fingerprint
+property for security and anti-detection.
+
+arrow edits:
+ - Correct prop name for our logic.
+
+Change-Id: I25cee935041e36a8e093ea503bb73efe8b1ae4f2
+---
+ prebuilts/api/31.0/private/property_contexts | 1 +
+ prebuilts/api/32.0/private/property_contexts | 1 +
+ prebuilts/api/33.0/private/property_contexts | 1 +
+ private/property_contexts                    | 1 +
+ 4 files changed, 4 insertions(+)
+
+diff --git a/prebuilts/api/31.0/private/property_contexts b/prebuilts/api/31.0/private/property_contexts
+index e0700fe0a..1434e2837 100644
+--- a/prebuilts/api/31.0/private/property_contexts
++++ b/prebuilts/api/31.0/private/property_contexts
+@@ -133,6 +133,7 @@ ro.crypto.              u:object_r:vold_prop:s0
+ # ro.build.fingerprint is either set in /system/build.prop, or is
+ # set at runtime by system_server.
+ ro.build.fingerprint    u:object_r:fingerprint_prop:s0 exact string
++ro.build.gms_fingerprint u:object_r:fingerprint_prop:s0 exact string
+ 
+ ro.persistent_properties.ready  u:object_r:persistent_properties_ready_prop:s0
+ 
+diff --git a/prebuilts/api/32.0/private/property_contexts b/prebuilts/api/32.0/private/property_contexts
+index f235b35b7..c7556ac5e 100644
+--- a/prebuilts/api/32.0/private/property_contexts
++++ b/prebuilts/api/32.0/private/property_contexts
+@@ -133,6 +133,7 @@ ro.crypto.              u:object_r:vold_prop:s0
+ # ro.build.fingerprint is either set in /system/build.prop, or is
+ # set at runtime by system_server.
+ ro.build.fingerprint    u:object_r:fingerprint_prop:s0 exact string
++ro.build.gms_fingerprint u:object_r:fingerprint_prop:s0 exact string
+ 
+ ro.persistent_properties.ready  u:object_r:persistent_properties_ready_prop:s0
+ 
+diff --git a/prebuilts/api/33.0/private/property_contexts b/prebuilts/api/33.0/private/property_contexts
+index 943d487ff..da316b6cf 100644
+--- a/prebuilts/api/33.0/private/property_contexts
++++ b/prebuilts/api/33.0/private/property_contexts
+@@ -140,6 +140,7 @@ ro.crypto.              u:object_r:vold_prop:s0
+ # ro.build.fingerprint is either set in /system/build.prop, or is
+ # set at runtime by system_server.
+ ro.build.fingerprint    u:object_r:fingerprint_prop:s0 exact string
++ro.build.gms_fingerprint u:object_r:fingerprint_prop:s0 exact string
+ 
+ ro.persistent_properties.ready  u:object_r:persistent_properties_ready_prop:s0
+ 
+diff --git a/private/property_contexts b/private/property_contexts
+index 943d487ff..da316b6cf 100644
+--- a/private/property_contexts
++++ b/private/property_contexts
+@@ -140,6 +140,7 @@ ro.crypto.              u:object_r:vold_prop:s0
+ # ro.build.fingerprint is either set in /system/build.prop, or is
+ # set at runtime by system_server.
+ ro.build.fingerprint    u:object_r:fingerprint_prop:s0 exact string
++ro.build.gms_fingerprint u:object_r:fingerprint_prop:s0 exact string
+ 
+ ro.persistent_properties.ready  u:object_r:persistent_properties_ready_prop:s0
+ 
+-- 
+2.40.0
+

@@ -1,0 +1,47 @@
+From 3a38734de58fd7244ab2fd2268d4a5c00b72aa65 Mon Sep 17 00:00:00 2001
+From: Danny Lin <danny@kdrag0n.dev>
+Date: Thu, 15 Apr 2021 22:36:39 -0700
+Subject: [PATCH] vendor: Spoof build fingerprint for Google Play Services
+ [2/2]
+
+SafetyNet's CTS profile attestation checks whether Build.FINGERPRINT
+matches that of the device's stock OS, which has passed CTS testing.
+Spoof the fingerprint for Google Play Services to help pass SafetyNet.
+
+NB: This code is under the gmscompat package, but it does not depend on
+any code from gmscompat.
+
+arrow edits:
+ - Correct prop name for our logic. We are planning use fp for different devices (like old oreo or follow new Pixel's).
+ - Use PRODUCT_SYSTEM_DEFAULT_PROPERTIES for avoid error: ADDITIONAL_SYSTEM_PROPERTIES must not set before here.
+ - Spoof dipper oreo fp
+ - To override fp for GMS, add in device tree:
+PRODUCT_OVERRIDE_GMS_FINGERPRINT := your fingerprint
+
+Signed-off-by: palaych <palaych@arrowos.net>
+Change-Id: I862487adf736f499802b345b0044fb34ac204dd6
+---
+ config/common.mk | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/config/common.mk b/config/common.mk
+index 4d97d6d8..81156c2b 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -215,6 +215,13 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/crowdin/overlay
+ PRODUCT_EXTRA_RECOVERY_KEYS += \
+     vendor/lineage/build/target/product/security/lineage
+ 
++# Spoof fingerprint for Google Play Services and SafetyNet
++ifeq ($(PRODUCT_OVERRIDE_GMS_FINGERPRINT),)
++PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.build.gms_fingerprint=Xiaomi/dipper/dipper:8.1.0/OPM1.171019.011/V9.5.5.0.OEAMIFA:user/release-keys
++else
++PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.build.gms_fingerprint=$(PRODUCT_OVERRIDE_GMS_FINGERPRINT)
++endif
++
+ include vendor/lineage/config/version.mk
+ 
+ -include vendor/lineage-priv/keys/keys.mk
+-- 
+2.40.0
+
